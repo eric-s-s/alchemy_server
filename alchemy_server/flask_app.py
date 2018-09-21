@@ -1,10 +1,10 @@
 '''a server for my dummy db using flask'''
 from functools import partial
 
-from flask import Flask, request, url_for, redirect, abort
+from flask import Flask, request
 from werkzeug.exceptions import BadRequest
 
-from alchemy_server.request_handler import RequestHandler
+from alchemy_server.request_handler import safe_handler
 
 app = Flask(__name__)
 
@@ -39,81 +39,77 @@ monkeys/<id>            just the one monkey
 
 @app.route('/zoos/', methods=['POST', 'GET', 'DELETE'])
 def all_zoos():
-    handler = RequestHandler()
-    method = _get_method()
-    request_json = _get_json()
+    with safe_handler() as handler:
+        method = _get_method()
+        request_json = _get_json()
 
-    actions = {
-        'GET': partial(handler.get_all_zoos),
-        'POST': partial(handler.post_zoo, request_json),
-        'DELETE': partial(handler.delete_all_zoos)
-    }
-    reply = actions[method]()
-    handler.close_connection()
+        actions = {
+            'GET': partial(handler.get_all_zoos),
+            'POST': partial(handler.post_zoo, request_json),
+            'DELETE': partial(handler.delete_all_zoos)
+        }
+        reply = actions[method]()
+
     return reply
 
 
 @app.route('/monkeys/', methods=['POST', 'GET', 'DELETE'])
 def all_monkeys():
-    handler = RequestHandler()
-    method = _get_method()
+    with safe_handler() as handler:
+        method = _get_method()
 
-    request_json = _get_json()
+        request_json = _get_json()
 
-    actions = {
-        'GET': partial(handler.get_all_monkeys),
-        'POST': partial(handler.post_monkey, request_json),
-        'DELETE': partial(handler.delete_all_monkeys)
-    }
-    reply = actions[method]()
-    handler.close_connection()
+        actions = {
+            'GET': partial(handler.get_all_monkeys),
+            'POST': partial(handler.post_monkey, request_json),
+            'DELETE': partial(handler.delete_all_monkeys)
+        }
+        reply = actions[method]()
     return reply
 
 
 @app.route('/zoos/<zoo_name>', methods=['PUT', 'GET', 'DELETE'])
 def zoo_by_name(zoo_name):
-    handler = RequestHandler()
-    method = _get_method()
+    with safe_handler() as handler:
+        method = _get_method()
 
-    request_json = _get_json()
+        request_json = _get_json()
 
-    actions = {
-        'GET': partial(handler.get_single_zoo, zoo_name),
-        'PUT': partial(handler.put_zoo, zoo_name, request_json),
-        'DELETE': partial(handler.delete_single_zoo, zoo_name)
-    }
-    reply = actions[method]()
-    handler.close_connection()
+        actions = {
+            'GET': partial(handler.get_single_zoo, zoo_name),
+            'PUT': partial(handler.put_zoo, zoo_name, request_json),
+            'DELETE': partial(handler.delete_single_zoo, zoo_name)
+        }
+        reply = actions[method]()
     return reply
 
 
 @app.route('/monkeys/<monkey_id>', methods=['PUT', 'GET', 'DELETE'])
 def monkey_by_id(monkey_id):
-    handler = RequestHandler()
-    method = _get_method()
+    with safe_handler() as handler:
+        method = _get_method()
 
-    request_json = _get_json()
+        request_json = _get_json()
 
-    actions = {
-        'GET': partial(handler.get_single_monkey, monkey_id),
-        'PUT': partial(handler.put_monkey, monkey_id, request_json),
-        'DELETE': partial(handler.delete_single_monkey, monkey_id)
-    }
-    reply = actions[method]()
-    handler.close_connection()
+        actions = {
+            'GET': partial(handler.get_single_monkey, monkey_id),
+            'PUT': partial(handler.put_monkey, monkey_id, request_json),
+            'DELETE': partial(handler.delete_single_monkey, monkey_id)
+        }
+        reply = actions[method]()
     return reply
 
 
 @app.route('/monkeys/<monkey_id>/zoo', methods=['GET'])
 def zoo_by_monkey_id(monkey_id):
-    handler = RequestHandler()
-    method = _get_method()
+    with safe_handler() as handler:
+        method = _get_method()
 
-    actions = {
-        'GET': partial(handler.get_zoo_by_monkey, monkey_id)
-    }
-    reply = actions[method]()
-    handler.close_connection()
+        actions = {
+            'GET': partial(handler.get_zoo_by_monkey, monkey_id)
+        }
+        reply = actions[method]()
     return reply
 
 
