@@ -1,0 +1,3 @@
+# name,opens,closes
+Wacky Zachy's Monkey Attacky,13:00,13:15
+The Boringest Zoo On Earth,08:00,17:00

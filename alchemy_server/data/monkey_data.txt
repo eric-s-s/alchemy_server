@@ -1,0 +1,5 @@
+# name,sex,flings_poop,poop_size,tmp_FK_zoo_name
+Dopey,m,TRUE,12,Wacky Zachy's Monkey Attacky
+Sneezy,f,FALSE,8,The Boringest Zoo On Earth
+Wheezy,m,TRUE,25,The Boringest Zoo On Earth
+Doc,f,TRUE,100,Wacky Zachy's Monkey Attacky
