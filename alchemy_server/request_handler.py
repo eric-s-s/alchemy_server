@@ -2,16 +2,7 @@ from datetime import time
 import json
 from contextlib import contextmanager
 
-from alchemy_server.db_classes import Monkey, Zoo, safe_session, Session
-
-
-# with safe_session() as session:
-#
-#     print(session.query(Monkey).all())
-#     print(session.query(Zoo).all())
-#     the_zoo = session.query(Zoo).filter(Zoo.name == "Wacky Zachy's Monkey Attacky").first()
-#     print(the_zoo.to_dict())
-#     print(the_zoo.monkeys)
+from alchemy_server.db_classes import Monkey, Zoo, Session
 
 
 class RequestHandler(object):
@@ -71,7 +62,8 @@ class RequestHandler(object):
         json fields: opens, closes
         """
         zoo = self.session.query(Zoo).filter(Zoo.name == zoo_name).first()
-
+        if zoo is None:
+            return "zoo_name does not exists: {}".format(zoo_name), 404
         keys = ['opens', 'closes']
         bad_fields = [key for key in json_data.keys() if key not in keys]
         if bad_fields:
@@ -81,113 +73,79 @@ class RequestHandler(object):
             setattr(zoo, key, value)
         self.session.commit()
         return json.dumps(zoo.to_dict()), 200
-#             value = _convert_value(raw_value)
-#             params = {'zoo': ZOO_TABLE, 'key': key}
-#             cmd = "UPDATE {zoo} SET {key} = %s WHERE name = %s".format(**params)
-#             self.cur.execute(cmd, (value, zoo_name))
-#         self.db.commit()
-#         return self.get_single_zoo(zoo_name)
-#
+
     def put_monkey(self, monkey_id, json_data):
         """
         json fields: name, sex, flings_poop, poop_size, zoo_name
         """
-        pass
-#         keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_name']
-#         bad_fields = [key for key in json_data.keys() if key not in keys]
-#         if bad_fields:
-#             print('\n\n\nNNNOOOOO\n\n\n')
-#             return "following json fields not allowed: {}".format(bad_fields), 400
-#         for key, raw_value in json_data.items():
-#             value = _convert_value(raw_value)
-#             params = {'monkey': MONKEY_TABLE, 'key': key}
-#             if key == 'zoo_name':
-#                 params['zoo'] = ZOO_TABLE
-#                 cmd = ("UPDATE {monkey}"
-#                        " SET zoo_id = (SELECT id FROM {zoo} WHERE {zoo}.name = %s)"
-#                        " WHERE id = %s"
-#                        ).format(**params)
-#             else:
-#                 cmd = "UPDATE {monkey} SET {key} = %s WHERE id = %s".format(**params)
-#             self.cur.execute(cmd, (value, monkey_id))
-#         self.db.commit()
-#         return self.get_single_monkey(monkey_id)
-#
+        monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
+        keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_name']
+        bad_fields = [key for key in json_data.keys() if key not in keys]
+        if bad_fields:
+            return "following json fields not allowed: {}".format(bad_fields), 400
+        for key, raw_value in json_data.items():
+            value = _convert_value(raw_value)
+            if key == 'zoo_name':
+                zoo_id = self.session.query(Zoo.id).filter(Zoo.name == value).first()
+                setattr(monkey, 'zoo_id', zoo_id)
+            else:
+                setattr(monkey, key, value)
+        self.session.commit()
+        return json.dumps(monkey.to_dict()), 200
+
     def post_zoo(self, json_data):
         """
         json fields: name, opens, closes
         """
-        pass
-#         keys = ['name', 'opens', 'closes']
-#         values = [_convert_value(json_data[key]) for key in keys]
-#
-#         cmd = "INSERT INTO {zoo} (name, opens, closes) VALUES (%s, %s, %s)".format(zoo=ZOO_TABLE)
-#         self.cur.execute(cmd, values)
-#         self.db.commit()
-#
-#         return self.get_single_zoo(json_data['name'])
-#
+        new_data = json_data.copy()
+        for key in ['opens', 'closes']:
+            new_data[key] = _parse_time_str(json_data[key])
+        new_zoo = Zoo(**new_data)
+        self.session.add(new_zoo)
+        self.session.commit()
+        return json.dumps(new_zoo.to_dict()), 200
+
     def post_monkey(self, json_data):
         """
         json fields: name, sex, flings_poop, poop_size, zoo_name
         """
-        pass
-#         keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_name']
-#         values = [_convert_value(json_data[key]) for key in keys]
-#         cmd = (
-#             "INSERT INTO {monkey} (name, sex, flings_poop, poop_size, zoo_id)"
-#             " VALUES (%s, %s, %s, %s, (SELECT id FROM {zoo} WHERE zoo.name = %s))"
-#         ).format(zoo=ZOO_TABLE, monkey=MONKEY_TABLE)
-#         self.cur.execute(cmd, values)
-#         self.db.commit()
-#
-#         self.cur.execute("SELECT MAX(id) FROM {monkey} ".format(monkey=MONKEY_TABLE))
-#         monkey_id = self.cur.fetchone()[0]
-#         return self.get_single_monkey(monkey_id)
-#
+        new_data = json_data.copy()
+        new_data['flings_poop'] = True if json_data['flings_poop'].lower() == 'true' else False
+        new_data['zoo_id'] = self.session.query(Zoo.id).filter(Zoo.name == json_data['zoo_name']).first()
+        del new_data['zoo_name']
+        new_monkey = Monkey(**new_data)
+        self.session.add(new_monkey)
+        self.session.commit()
+        return json.dumps(new_monkey.to_dict()), 200
+
     def delete_all_zoos(self):
-        pass
-#         self.cur.execute("DELETE FROM {}".format(ZOO_TABLE))
-#         self.db.commit()
-#         return self.get_all_zoos()
-#
+        for zoo in self.session.query(Zoo).all():
+            self.session.delete(zoo)
+        self.session.commit()
+        return self.get_all_zoos()
+
     def delete_all_monkeys(self):
-        pass
-#         self.cur.execute("DELETE FROM {}".format(MONKEY_TABLE))
-#         self.db.commit()
-#         return self.get_all_monkeys()
-#
+        for monkey in self.session.query(Monkey).all():
+            self.session.delete(monkey)
+        self.session.commit()
+        return self.get_all_monkeys()
+
     def delete_single_monkey(self, monkey_id):
-        pass
-#         self.cur.execute("DELETE FROM {} WHERE id = %s".format(MONKEY_TABLE), (monkey_id,))
-#         self.db.commit()
-#         return self.get_all_monkeys()
-#
+        monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
+        self.session.delete(monkey)
+        self.session.commit()
+        return self.get_all_monkeys()
+
     def delete_single_zoo(self, zoo_name):
-        pass
-#         self.cur.execute("DELETE FROM {} WHERE name = %s".format(ZOO_TABLE), (zoo_name,))
-#         self.db.commit()
-#         return self.get_all_zoos()
-#
+        zoo = self.session.query(Zoo).filter(Zoo.name == zoo_name).first()
+        self.session.delete(zoo)
+        self.session.commit()
+        return self.get_all_zoos()
+
     def close_connection(self):
         self.session.close()
 
-#     def _get_fields(self, table):
-#         self.cur.execute("show columns from {};".format(table))
-#         return [field[0] for field in self.cur.fetchall()]
-#
-#     def _get_all(self, table):
-#         fields = self._get_fields(table)
-#         self.cur.execute("select * from {};".format(table))
-#         answers = self.cur.fetchall()
-#         return [{field: entry[index] for index, field in enumerate(fields)} for entry in answers]
-#
-#
-# def _create_dict(keys, values):
-#     items = zip(keys, values)
-#     return {key: str(value) if isinstance(value, timedelta) else value for key, value in items}
-#
-#
+
 def _convert_value(value):
     if not isinstance(value, str):
         return value
@@ -200,8 +158,8 @@ def _convert_value(value):
 
 
 def _parse_time_str(time_str):
-    hour, min = time_str.split(':')
-    return time(int(hour), int(min))
+    hour, minute = time_str.split(':')
+    return time(int(hour), int(minute))
 
 
 @contextmanager

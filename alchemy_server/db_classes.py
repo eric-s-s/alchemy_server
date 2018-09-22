@@ -1,10 +1,9 @@
-from contextlib import contextmanager
 import enum
 
 from alchemy_server import ZOO_TABLE, MONKEY_TABLE, USER, DB
 
 
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, UniqueConstraint, Enum
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -44,9 +43,6 @@ class Zoo(Base):
             'monkeys': monkeys
         }
 
-    def __repr__(self):
-        return "<Zoo {!r}, {!r}. {!r}>".format(self.name, self.opens, self.closes)
-
 
 class Monkey(Base):
     __tablename__ = MONKEY_TABLE
@@ -69,18 +65,3 @@ class Monkey(Base):
             'poop_size': self.poop_size,
             'zoo_name': self.zoo.name
         }
-
-    def __repr__(self):
-        out = "<monkey: " + 6 * "{!r}, "
-        out = out.rstrip(', ') + '>'
-        return out.format(self.id, self.name, self.sex, self.flings_poop, self.poop_size, self.zoo.name)
-
-
-@contextmanager
-def safe_session():
-    session = Session()
-    try:
-        yield session
-    finally:
-        session.close()
-
