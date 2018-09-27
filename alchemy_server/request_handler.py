@@ -54,8 +54,17 @@ class RequestHandler(object):
     def get_zoo_by_monkey(self, monkey_id):
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
         if monkey is None:
-            return "monkey id does not exists: {}".format(monkey_id)
+            return "monkey id does not exists: {}".format(monkey_id), 404
         return json.dumps(monkey.zoo.to_dict()), 200
+
+    def get_zoo_field_by_monkey(self, monkey_id, field):
+        monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
+        if monkey is None:
+            return "monkey id does not exists: {}".format(monkey_id), 404
+        zoo = monkey.zoo
+        if not hasattr(zoo, field):
+            return "zoo does not have field: {!r}".format(field), 404
+        return json.dumps({field: getattr(zoo, field)}), 200
 
     def put_zoo(self, zoo_name, json_data):
         """

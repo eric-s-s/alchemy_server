@@ -113,6 +113,18 @@ def zoo_by_monkey_id(monkey_id):
     return reply
 
 
+@app.route('/monkeys/<monkey_id>/zoo/<field>', methods=['GET'])
+def zoo_field_by_monkey_id(monkey_id, field):
+    with safe_handler() as handler:
+        method = _get_method()
+
+        actions = {
+            'GET': partial(handler.get_zoo_field_by_monkey, monkey_id, field)
+        }
+        reply = actions[method]()
+    return reply
+
+
 def _get_json() -> dict:
     """
     :raise: BadRequest
