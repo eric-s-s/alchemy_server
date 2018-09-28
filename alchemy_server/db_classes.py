@@ -26,7 +26,7 @@ class Zoo(Base):
     __tablename__ = ZOO_TABLE
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(30), unique=True, nullable=False)
+    name = Column(String(50), unique=True, nullable=False)
     opens = Column(Time, nullable=False)
     closes = Column(Time, nullable=False)
 
