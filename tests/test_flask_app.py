@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from alchemy_server import flask_app
-from alchemy_server.request_handler import RequestHandler
+from zoo_server import flask_app
+from zoo_server.request_handler import RequestHandler
 
 
 class TestFlaskApp(unittest.TestCase):
 
-    patch_str = 'alchemy_server.request_handler.RequestHandler'
+    patch_str = 'zoo_server.request_handler.RequestHandler'
 
     methods = [key for key in RequestHandler.__dict__.keys() if not key.startswith('__')]
 

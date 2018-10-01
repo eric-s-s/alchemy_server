@@ -5,7 +5,7 @@ import mysql.connector as cnx
 
 def get_file_paths():
     parent_dir = os.path.dirname(__file__)
-    data_dir = os.path.join(parent_dir, 'alchemy_server', 'data')
+    data_dir = os.path.join(parent_dir, 'zoo_server', 'data')
     zoo_file = os.path.join(data_dir, 'zoo_data.txt')
     monkey_file = os.path.join(data_dir, 'monkey_data.txt')
     return zoo_file, monkey_file

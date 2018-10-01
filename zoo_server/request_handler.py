@@ -2,7 +2,7 @@ from datetime import time
 import json
 from contextlib import contextmanager
 
-from alchemy_server.db_classes import Monkey, Zoo, Session
+from zoo_server.db_classes import Monkey, Zoo, Session
 
 
 class RequestHandler(object):

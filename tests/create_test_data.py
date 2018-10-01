@@ -2,7 +2,7 @@ import os
 import csv
 import mysql.connector as cnx
 
-from alchemy_server import USER, DATA_PATH, MONKEY_TABLE, ZOO_TABLE
+from zoo_server import USER, DATA_PATH, MONKEY_TABLE, ZOO_TABLE
 
 TEST_DB = 'test'
 

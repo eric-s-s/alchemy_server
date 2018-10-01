@@ -4,7 +4,7 @@ from functools import partial
 from flask import Flask, request
 from werkzeug.exceptions import BadRequest
 
-from alchemy_server.request_handler import safe_handler
+from zoo_server.request_handler import safe_handler
 
 app = Flask(__name__)
 

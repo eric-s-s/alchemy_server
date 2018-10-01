@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 import tests.create_test_data as test_data
 
-from alchemy_server.request_handler import RequestHandler
+from zoo_server.request_handler import RequestHandler
 
 
 test_engine = create_engine("mysql://{}@localhost/{}".format(test_data.USER, test_data.TEST_DB),
@@ -21,7 +21,7 @@ from pprint import pprint
 
 class TestRequestHandler(unittest.TestCase):
 
-    @patch('alchemy_server.request_handler.Session', TestSession)
+    @patch('zoo_server.request_handler.Session', TestSession)
     def setUp(self):
         self.handler = RequestHandler()
         self.session = TestSession()
