@@ -3,15 +3,9 @@ import enum
 from zoo_server import ZOO_TABLE, MONKEY_TABLE, USER, DB
 
 
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Time, Boolean, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, Time, Boolean, Enum
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-
-engine = create_engine("mysql://{}@localhost/{}".format(USER, DB),
-                       encoding='latin1')
-
-
-Session = sessionmaker(bind=engine)
+from sqlalchemy.orm import relationship
 
 
 Base = declarative_base()

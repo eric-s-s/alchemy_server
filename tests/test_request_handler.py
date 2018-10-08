@@ -9,11 +9,10 @@ import tests.create_test_data as test_data
 from zoo_server.request_handler import RequestHandler
 
 
-test_engine = create_engine("mysql://{}@localhost/{}".format(test_data.USER, test_data.TEST_DB),
-                            encoding='latin1')
-
-
-TestSession = sessionmaker(bind=test_engine)
+def create_test_session(host='localhost'):
+    test_engine = create_engine("mysql://{}@{}/{}".format(test_data.USER, host,test_data.TEST_DB),
+                                encoding='latin1')
+    return sessionmaker(bind=test_engine)()
 
 
 from pprint import pprint
@@ -21,10 +20,10 @@ from pprint import pprint
 
 class TestRequestHandler(unittest.TestCase):
 
-    @patch('zoo_server.request_handler.Session', TestSession)
+    @patch('zoo_server.request_handler.create_session', create_test_session)
     def setUp(self):
         self.handler = RequestHandler()
-        self.session = TestSession()
+        self.session = create_test_session()
         test_data.main()
 
     def tearDown(self):

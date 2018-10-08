@@ -2,12 +2,13 @@ from datetime import time
 import json
 from contextlib import contextmanager
 
-from zoo_server.db_classes import Monkey, Zoo, Session
+from zoo_server.db_classes import Monkey, Zoo
+from zoo_server.session import create_session
 
 
 class RequestHandler(object):
-    def __init__(self):
-        self.session = Session()
+    def __init__(self, host='localhost'):
+        self.session = create_session(host)
 
     def get_all_zoos(self):
         """
@@ -172,8 +173,8 @@ def _parse_time_str(time_str):
 
 
 @contextmanager
-def safe_handler():
-    handler = RequestHandler()
+def safe_handler(host='localhost'):
+    handler = RequestHandler(host)
     try:
         yield handler
     finally:

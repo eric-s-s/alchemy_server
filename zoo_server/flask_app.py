@@ -1,5 +1,6 @@
 '''a server for my dummy db using flask'''
 from functools import partial
+import sys 
 
 from flask import Flask, request
 from werkzeug.exceptions import BadRequest
@@ -39,7 +40,8 @@ monkeys/<id>            just the one monkey
 
 @app.route('/zoos/', methods=['POST', 'GET', 'DELETE'])
 def all_zoos():
-    with safe_handler() as handler:
+    app_host = app.config.get('app_host')
+    with safe_handler(app_host) as handler:
         method = _get_method()
         request_json = _get_json()
 
@@ -55,7 +57,8 @@ def all_zoos():
 
 @app.route('/monkeys/', methods=['POST', 'GET', 'DELETE'])
 def all_monkeys():
-    with safe_handler() as handler:
+    app_host = app.config.get('app_host')
+    with safe_handler(app_host) as handler:
         method = _get_method()
 
         request_json = _get_json()
@@ -71,7 +74,8 @@ def all_monkeys():
 
 @app.route('/zoos/<zoo_name>', methods=['PUT', 'GET', 'DELETE'])
 def zoo_by_name(zoo_name):
-    with safe_handler() as handler:
+    app_host = app.config.get('app_host')
+    with safe_handler(app_host) as handler:
         method = _get_method()
 
         request_json = _get_json()
@@ -87,7 +91,8 @@ def zoo_by_name(zoo_name):
 
 @app.route('/monkeys/<monkey_id>', methods=['PUT', 'GET', 'DELETE'])
 def monkey_by_id(monkey_id):
-    with safe_handler() as handler:
+    app_host = app.config.get('app_host')
+    with safe_handler(app_host) as handler:
         method = _get_method()
 
         request_json = _get_json()
@@ -103,7 +108,8 @@ def monkey_by_id(monkey_id):
 
 @app.route('/monkeys/<monkey_id>/zoo', methods=['GET'])
 def zoo_by_monkey_id(monkey_id):
-    with safe_handler() as handler:
+    app_host = app.config.get('app_host')
+    with safe_handler(app_host) as handler:
         method = _get_method()
 
         actions = {
@@ -115,7 +121,8 @@ def zoo_by_monkey_id(monkey_id):
 
 @app.route('/monkeys/<monkey_id>/zoo/<field>', methods=['GET'])
 def zoo_field_by_monkey_id(monkey_id, field):
-    with safe_handler() as handler:
+    app_host = app.config.get('app_host')
+    with safe_handler(app_host) as handler:
         method = _get_method()
 
         actions = {
@@ -146,5 +153,9 @@ def _get_method():
 
 
 if __name__ == '__main__':
-    app.run(port=8080)
+    host_arg = 'localhost'
+    if len(sys.argv) > 1:
+        host_arg = sys.argv[1]
+    app.config['app_host'] = host_arg
+    app.run(host="0.0.0.0", port=8080)
 
