@@ -1,14 +1,12 @@
 from datetime import time
 import json
-from contextlib import contextmanager
 
 from zoo_server.db_classes import Monkey, Zoo
-from zoo_server.session import create_session
 
 
 class DBRequestHandler(object):
-    def __init__(self, host='localhost'):
-        self.session = create_session(host)
+    def __init__(self, session):
+        self.session = session
 
     def get_all_zoos(self):
         """
@@ -140,9 +138,6 @@ class DBRequestHandler(object):
         self.session.commit()
         return self.get_all_zoos()
 
-    def close_connection(self):
-        self.session.close()
-
 
 def _convert_value(value):
     if not isinstance(value, str):
@@ -158,12 +153,3 @@ def _convert_value(value):
 def _parse_time_str(time_str):
     hour, minute = time_str.split(':')
     return time(int(hour), int(minute))
-
-
-@contextmanager
-def safe_db_handler(host='localhost'):
-    handler = DBRequestHandler(host)
-    try:
-        yield handler
-    finally:
-        handler.close_connection()

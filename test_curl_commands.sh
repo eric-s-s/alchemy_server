@@ -1,15 +1,13 @@
-eval "$(./export_db_values)"
 
 echo creating test data
 cd sql_scripts
-./load_test_data.sh
+    ./load_test_data.sh
+    eval "$(./export_db_values.sh)"
 cd ..
-
 
 mysql ${db} -u ${user}  -e 'select * from zoo;'
 
 mysql ${db} -u ${user} -e 'select * from monkey;'
-
 
 # GET
 printf "\n\n\ncommand: GET monkeys\n\n" | tee  output.txt  error.txt
@@ -98,12 +96,11 @@ curl -I localhost:8080/zoos/nope >> output.txt 2>> error.txt
 printf "\n\n\ncommand delete monkey #1\n\n" | tee  -a output.txt  error.txt
 curl -X DELETE localhost:8080/monkeys/1 | jq . >> output.txt 2>> error.txt
 
+printf "\n\n\ncommand: GET monkeys\n\n" | tee -a output.txt  error.txt
+curl localhost:8080/monkeys/ | jq . >> output.txt 2>> error.txt
+
 printf "\n\n\ncommand delete wacky zachy's\n\n" | tee  -a output.txt  error.txt
 curl -X DELETE localhost:8080/zoos/1 | jq . >> output.txt 2>> error.txt
-
-./create_test_data.sh
-
-printf "\n\n\nREPOPULATING DB\n\n" | tee -a output.txt  error.txt
 
 printf "\n\n\ncommand: GET monkeys\n\n" | tee -a output.txt  error.txt
 curl localhost:8080/monkeys/ | jq . >> output.txt 2>> error.txt

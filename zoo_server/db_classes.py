@@ -1,6 +1,6 @@
 import enum
 
-from zoo_server import ZOO_TABLE, MONKEY_TABLE, USER, DB
+from zoo_server import ZOO_TABLE, MONKEY_TABLE
 
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Time, Boolean, Enum

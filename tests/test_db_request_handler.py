@@ -1,6 +1,5 @@
 import json
 import unittest
-from unittest.mock import patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -9,26 +8,23 @@ import tests.create_test_data as test_data
 from zoo_server.db_request_handler import DBRequestHandler
 
 
-def create_test_session(host='localhost'):
-    test_engine = create_engine("mysql://{}@{}/{}".format(test_data.USER, host,test_data.TEST_DB),
-                                encoding='latin1')
-    return sessionmaker(bind=test_engine)()
+test_engine = create_engine("mysql://{}@{}/{}".format(test_data.USER, 'localhost', test_data.TEST_DB),
+                            encoding='latin1')
 
+TestingSession = sessionmaker(bind=test_engine)
 
 from pprint import pprint
 
 
 class TestDBRequestHandler(unittest.TestCase):
 
-    @patch('zoo_server.db_request_handler.create_session', create_test_session)
     def setUp(self):
-        self.handler = DBRequestHandler()
-        self.session = create_test_session()
+        self.session = TestingSession()
+        self.handler = DBRequestHandler(self.session)
         test_data.main()
         self.maxDiff = None
 
     def tearDown(self):
-        self.handler.close_connection()
         self.session.close()
 
     def test_get_all_monkeys(self):
@@ -111,4 +107,3 @@ class TestDBRequestHandler(unittest.TestCase):
         ]
         self.assertEqual(json.loads(answer[0]), expected)
         self.assertEqual(answer[1], 200)
-
