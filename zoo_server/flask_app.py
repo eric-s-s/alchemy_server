@@ -5,7 +5,7 @@ import sys
 from flask import Flask, request
 from werkzeug.exceptions import BadRequest
 
-from zoo_server.request_handler import safe_handler
+from zoo_server.db_request_handler import safe_handler
 
 app = Flask(__name__)
 
@@ -14,31 +14,29 @@ app = Flask(__name__)
 
 cases:
 GET
-zoos/                   returns: name, opens, closes, number_of_monkeys
-zoos/<name>             returns: name, opens, closes, monkeys
+zoos/                   returns: id, name, opens, closes, monkeys
+zoos/<id>               returns: id, name, opens, closes, monkeys
 
-monkeys/                returns: id, name, sex, flings_poop, poop_size, zoo_name
-monkeys/<id>            returns: id, name, sex, flings_poop, poop_size, zoo_name
-monkeys/<id>/zoo        returns: as zoos/<name>
+monkeys/                returns: id, name, sex, flings_poop, poop_size, zoo_name, zoo_id
+monkeys/<id>            returns: id, name, sex, flings_poop, poop_size, zoo_name, zoo_id
+monkeys/<id>/zoo        returns: as zoos/<id>
 
 POST
 zoos/                   json_field: name, opens, closes
-monkeys/                json_field: name, sex, flings_poop, poop_size, zoo_name
+monkeys/                json_field: name, sex, flings_poop, poop_size, zoo_id
 
 PUT
-zoos/<name>             possible fields: opens, closes, [monkey_ids] (adds to current)
-monkeys/<id>            possible fields: name, flings_poop, poop_size, zoo_name  NOTE sex returns 404
+zoos/<id>               possible fields: name, opens, closes, monkey_id (adds to current)
+monkeys/<id>            possible fields: name, flings_poop, poop_size, zoo_id
 
 DELETE
-zoos/                   all zoos and their associated monkeys
-monkeys/                all monkeys but not the zoos
-zoos/<name>             zoo and all monkeys in the zoo
+zoos/<id>               zoo and all monkeys in the zoo
 monkeys/<id>            just the one monkey
 
 """
 
 
-@app.route('/zoos/', methods=['POST', 'GET', 'DELETE'])
+@app.route('/zoos/', methods=['POST', 'GET'])
 def all_zoos():
     app_host = app.config.get('app_host')
     with safe_handler(app_host) as handler:
@@ -48,14 +46,13 @@ def all_zoos():
         actions = {
             'GET': partial(handler.get_all_zoos),
             'POST': partial(handler.post_zoo, request_json),
-            'DELETE': partial(handler.delete_all_zoos)
         }
         reply = actions[method]()
 
     return reply
 
 
-@app.route('/monkeys/', methods=['POST', 'GET', 'DELETE'])
+@app.route('/monkeys/', methods=['POST', 'GET'])
 def all_monkeys():
     app_host = app.config.get('app_host')
     with safe_handler(app_host) as handler:
@@ -66,14 +63,13 @@ def all_monkeys():
         actions = {
             'GET': partial(handler.get_all_monkeys),
             'POST': partial(handler.post_monkey, request_json),
-            'DELETE': partial(handler.delete_all_monkeys)
         }
         reply = actions[method]()
     return reply
 
 
-@app.route('/zoos/<zoo_name>', methods=['PUT', 'GET', 'DELETE'])
-def zoo_by_name(zoo_name):
+@app.route('/zoos/<zoo_id>', methods=['PUT', 'GET', 'DELETE'])
+def zoo_by_name(zoo_id):
     app_host = app.config.get('app_host')
     with safe_handler(app_host) as handler:
         method = _get_method()
@@ -81,9 +77,9 @@ def zoo_by_name(zoo_name):
         request_json = _get_json()
 
         actions = {
-            'GET': partial(handler.get_single_zoo, zoo_name),
-            'PUT': partial(handler.put_zoo, zoo_name, request_json),
-            'DELETE': partial(handler.delete_single_zoo, zoo_name)
+            'GET': partial(handler.get_zoo, zoo_id),
+            'PUT': partial(handler.put_zoo, zoo_id, request_json),
+            'DELETE': partial(handler.delete_zoo, zoo_id)
         }
         reply = actions[method]()
     return reply
@@ -98,9 +94,9 @@ def monkey_by_id(monkey_id):
         request_json = _get_json()
 
         actions = {
-            'GET': partial(handler.get_single_monkey, monkey_id),
+            'GET': partial(handler.get_monkey, monkey_id),
             'PUT': partial(handler.put_monkey, monkey_id, request_json),
-            'DELETE': partial(handler.delete_single_monkey, monkey_id)
+            'DELETE': partial(handler.delete_monkey, monkey_id)
         }
         reply = actions[method]()
     return reply

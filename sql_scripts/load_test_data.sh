@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-if [ ! -d "$(pwd)/sql_scripts" ]; then 
-    echo "must be called from project top directory";
-    exit;
-fi
+#if [ ! -d "$(pwd)/sql_scripts" ]; then 
+#    echo "must be called from project top directory";
+#    exit;
+#fi
 
 
-data_dir=$( test $1 && echo $1 || echo . )
+#data_dir=$( test $1 && echo $1 || echo . )
+
+data_dir="../zoo_server/data"
+
 zoo_path="$data_dir/zoo_data.txt"
 monkey_path="$data_dir/monkey_data.txt"
 
@@ -16,13 +19,12 @@ if [ ! -e $zoo_path ]; then
 fi
 
 
-sql_scripts/drop_all.sh
+eval "$(./export_db_values.sh)"
 
-mysql zoo -u zoo_guest < sql_scripts/create_tables.sql
+./drop_all.sh
 
-user="zoo_guest"
-db="zoo"
 
+mysql $db -u $user < create_tables.sql
 
 function prepare_values {
     out=${1//,/\",\"}

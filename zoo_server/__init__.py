@@ -1,7 +1,7 @@
 import os
 
-USER = 'zoo_guest'
-DB = "zoo"
+USER = 'zoo_db_user'
+DB = "zoo_db"
 
 ZOO_TABLE = "zoo"
 MONKEY_TABLE = "monkey"

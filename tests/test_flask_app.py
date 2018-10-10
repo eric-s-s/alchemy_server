@@ -1,19 +1,19 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from zoo_server import flask_app
-from zoo_server.request_handler import RequestHandler
+from zoo_server.db_request_handler import DBRequestHandler
 
 
 class TestFlaskApp(unittest.TestCase):
 
-    patch_str = 'zoo_server.request_handler.RequestHandler'
+    patch_str = 'zoo_server.db_request_handler.DBRequestHandler'
 
-    methods = [key for key in RequestHandler.__dict__.keys() if not key.startswith('__')]
+    methods = [key for key in DBRequestHandler.__dict__.keys() if not key.startswith('__')]
 
     def setUp(self):
         self.app = flask_app.app.test_client()
         flask_app.app.testing = True
-        self.mock = MagicMock(spec=RequestHandler)
+        self.mock = MagicMock(spec=DBRequestHandler)
         self.instance = self.mock.return_value
 
         return_value = 'good', 200
@@ -27,13 +27,6 @@ class TestFlaskApp(unittest.TestCase):
             self.app.get('/monkeys/')
 
             self.instance.get_all_monkeys.assert_called_once()
-            self.instance.close_connection.assert_called_once()
-
-    def test_all_monkeys_delete(self):
-        with patch(self.patch_str, self.mock):
-            self.app.delete('/monkeys/')
-
-            self.instance.delete_all_monkeys.assert_called_once()
             self.instance.close_connection.assert_called_once()
 
     def test_all_monkeys_post(self):
@@ -58,13 +51,6 @@ class TestFlaskApp(unittest.TestCase):
             self.instance.get_all_zoos.assert_called_once()
             self.instance.close_connection.assert_called_once()
 
-    def test_all_zoos_delete(self):
-        with patch(self.patch_str, self.mock):
-            self.app.delete('/zoos/')
-
-            self.instance.delete_all_zoos.assert_called_once()
-            self.instance.close_connection.assert_called_once()
-
     def test_all_zoos_post(self):
         with patch(self.patch_str, self.mock):
             json_data = {'a': 1, 'b':'hello'}
@@ -80,47 +66,47 @@ class TestFlaskApp(unittest.TestCase):
             self.instance.get_all_zoos.assert_called_once()
             self.instance.close_connection.assert_called_once()
 
-    def test_zoo_by_name_get(self):
+    def test_zoo_by_id_get(self):
         with patch(self.patch_str, self.mock):
-            self.app.get('/zoos/a')
+            self.app.get('/zoos/1')
 
-            self.instance.get_single_zoo.assert_called_once_with('a')
+            self.instance.get_zoo.assert_called_once_with('1')
             self.instance.close_connection.assert_called_once()
 
-    def test_zoo_by_name_delete(self):
+    def test_zoo_by_id_delete(self):
         with patch(self.patch_str, self.mock):
-            self.app.delete('/zoos/a')
+            self.app.delete('/zoos/1')
 
-            self.instance.delete_single_zoo.assert_called_once_with('a')
+            self.instance.delete_zoo.assert_called_once_with('1')
             self.instance.close_connection.assert_called_once()
 
-    def test_zoo_by_name_put(self):
+    def test_zoo_by_id_put(self):
         with patch(self.patch_str, self.mock):
             json_data = {'a': 1, 'b': 'c'}
-            self.app.put('/zoos/a', json=json_data)
+            self.app.put('/zoos/1', json=json_data)
 
-            self.instance.put_zoo.assert_called_once_with('a', json_data)
+            self.instance.put_zoo.assert_called_once_with('1', json_data)
             self.instance.close_connection.assert_called_once()
 
-    def test_zoo_by_name_head(self):
+    def test_zoo_by_id_head(self):
         with patch(self.patch_str, self.mock):
-            self.app.head('/zoos/a')
+            self.app.head('/zoos/1')
 
-            self.instance.get_single_zoo.assert_called_once_with('a')
+            self.instance.get_zoo.assert_called_once_with('1')
             self.instance.close_connection.assert_called_once()
 
     def test_monkey_by_id_get(self):
         with patch(self.patch_str, self.mock):
             self.app.get('/monkeys/1')
 
-            self.instance.get_single_monkey.assert_called_once_with('1')
+            self.instance.get_monkey.assert_called_once_with('1')
             self.instance.close_connection.assert_called_once()
 
     def test_monkey_by_id_delete(self):
         with patch(self.patch_str, self.mock):
             self.app.delete('/monkeys/1')
 
-            self.instance.delete_single_monkey.assert_called_once_with('1')
+            self.instance.delete_monkey.assert_called_once_with('1')
             self.instance.close_connection.assert_called_once()
 
     def test_monkey_by_id_put(self):
@@ -135,7 +121,7 @@ class TestFlaskApp(unittest.TestCase):
         with patch(self.patch_str, self.mock):
             self.app.head('/monkeys/1')
 
-            self.instance.get_single_monkey.assert_called_once_with('1')
+            self.instance.get_monkey.assert_called_once_with('1')
             self.instance.close_connection.assert_called_once()
 
     def test_zoo_by_monkey_id_get(self):

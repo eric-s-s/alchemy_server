@@ -6,13 +6,13 @@ from zoo_server.db_classes import Monkey, Zoo
 from zoo_server.session import create_session
 
 
-class RequestHandler(object):
+class DBRequestHandler(object):
     def __init__(self, host='localhost'):
         self.session = create_session(host)
 
     def get_all_zoos(self):
         """
-        return fields: name, opens, closes, number_of_monkeys
+        return fields: id, name, opens, closes, number_of_monkeys
 
         :return: json_str, code
         """
@@ -22,7 +22,7 @@ class RequestHandler(object):
 
     def get_all_monkeys(self):
         """
-        return fields: id, name, sex, flings_poop, poop_size, zoo_name
+        return fields: id, name, sex, flings_poop, poop_size, zoo_name, zoo_id
 
         :return: json_str, response_code
         """
@@ -30,20 +30,20 @@ class RequestHandler(object):
         answer = [monkey.to_dict() for monkey in monkeys]
         return json.dumps(answer), 200
 
-    def get_single_zoo(self, zoo_name):
+    def get_zoo(self, zoo_id):
         """
-        return fields: name, opens, closes, monkey_ids
+        return fields: name, opens, closes, monkey_jsons
 
         :return: json_str, response_code
         """
-        zoo = self.session.query(Zoo).filter(Zoo.name == zoo_name).first()
+        zoo = self.session.query(Zoo).filter(Zoo.id == zoo_id).first()
         if zoo is None:
-            return "zoo name does not exist: {}".format(zoo_name), 404
+            return "zoo id does not exist: {}".format(zoo_id), 404
         return json.dumps(zoo.to_dict()), 200
 
-    def get_single_monkey(self, monkey_id):
+    def get_monkey(self, monkey_id):
         """
-        return fields: id, name, sex, flings_poop, poop_size, zoo_name
+        return fields: id, name, sex, flings_poop, poop_size, zoo_name, zoo_id
 
         :return: json_str, response_code
         """
@@ -67,13 +67,13 @@ class RequestHandler(object):
             return "zoo does not have field: {!r}".format(field), 404
         return json.dumps({field: getattr(zoo, field)}), 200
 
-    def put_zoo(self, zoo_name, json_data):
+    def put_zoo(self, zoo_id, json_data):
         """
         json fields: opens, closes
         """
-        zoo = self.session.query(Zoo).filter(Zoo.name == zoo_name).first()
+        zoo = self.session.query(Zoo).filter(Zoo.id == zoo_id).first()
         if zoo is None:
-            return "zoo_name does not exists: {}".format(zoo_name), 404
+            return "zoo_id does not exists: {}".format(zoo_id), 404
         keys = ['opens', 'closes']
         bad_fields = [key for key in json_data.keys() if key not in keys]
         if bad_fields:
@@ -86,20 +86,18 @@ class RequestHandler(object):
 
     def put_monkey(self, monkey_id, json_data):
         """
-        json fields: name, sex, flings_poop, poop_size, zoo_name
+        json fields: name, sex, flings_poop, poop_size, zoo_id
         """
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
-        keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_name']
+        if monkey is None:
+            return "monkey_id does not exist: {}".format(monkey_id), 404
+        keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_id']
         bad_fields = [key for key in json_data.keys() if key not in keys]
         if bad_fields:
             return "following json fields not allowed: {}".format(bad_fields), 400
         for key, raw_value in json_data.items():
             value = _convert_value(raw_value)
-            if key == 'zoo_name':
-                zoo_id = self.session.query(Zoo.id).filter(Zoo.name == value).first()
-                setattr(monkey, 'zoo_id', zoo_id)
-            else:
-                setattr(monkey, key, value)
+            setattr(monkey, key, value)
         self.session.commit()
         return json.dumps(monkey.to_dict()), 200
 
@@ -117,37 +115,27 @@ class RequestHandler(object):
 
     def post_monkey(self, json_data):
         """
-        json fields: name, sex, flings_poop, poop_size, zoo_name
+        json fields: name, sex, flings_poop, poop_size, zoo_id
         """
         new_data = json_data.copy()
         new_data['flings_poop'] = True if json_data['flings_poop'].lower() == 'true' else False
-        new_data['zoo_id'] = self.session.query(Zoo.id).filter(Zoo.name == json_data['zoo_name']).first()
-        del new_data['zoo_name']
         new_monkey = Monkey(**new_data)
         self.session.add(new_monkey)
         self.session.commit()
         return json.dumps(new_monkey.to_dict()), 200
 
-    def delete_all_zoos(self):
-        for zoo in self.session.query(Zoo).all():
-            self.session.delete(zoo)
-        self.session.commit()
-        return self.get_all_zoos()
-
-    def delete_all_monkeys(self):
-        for monkey in self.session.query(Monkey).all():
-            self.session.delete(monkey)
-        self.session.commit()
-        return self.get_all_monkeys()
-
-    def delete_single_monkey(self, monkey_id):
+    def delete_monkey(self, monkey_id):
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
+        if monkey is None:
+            return "monkey_id :{} does not exist".format(monkey_id), 404
         self.session.delete(monkey)
         self.session.commit()
         return self.get_all_monkeys()
 
-    def delete_single_zoo(self, zoo_name):
-        zoo = self.session.query(Zoo).filter(Zoo.name == zoo_name).first()
+    def delete_zoo(self, zoo_id):
+        zoo = self.session.query(Zoo).filter(Zoo.id == zoo_id).first()
+        if zoo is None:
+            return "zoo_id: {} does not exist".format(zoo_id), 404
         self.session.delete(zoo)
         self.session.commit()
         return self.get_all_zoos()
@@ -174,7 +162,7 @@ def _parse_time_str(time_str):
 
 @contextmanager
 def safe_handler(host='localhost'):
-    handler = RequestHandler(host)
+    handler = DBRequestHandler(host)
     try:
         yield handler
     finally:

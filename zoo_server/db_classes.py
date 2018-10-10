@@ -31,6 +31,7 @@ class Zoo(Base):
         format_str = '%H:%M'
         monkeys = [monkey.to_dict() for monkey in self.monkeys]
         return {
+            'id': self.id,
             'name': self.name,
             'opens': self.opens.strftime(format_str),
             'closes': self.closes.strftime(format_str),
@@ -57,5 +58,6 @@ class Monkey(Base):
             'sex': self.sex.name,
             'flings_poop': str(self.flings_poop).upper(),
             'poop_size': self.poop_size,
-            'zoo_name': self.zoo.name
+            'zoo_name': self.zoo.name,
+            'zoo_id': self.zoo_id
         }
