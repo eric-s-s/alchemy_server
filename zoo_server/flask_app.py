@@ -1,13 +1,21 @@
 '''a server for my dummy db using flask'''
 from functools import partial
-import sys 
+import os
 
 from flask import Flask, request
 from werkzeug.exceptions import BadRequest
 
-from zoo_server.db_request_handler import safe_handler
+from zoo_server.db_request_handler import safe_db_handler
+
 
 app = Flask(__name__)
+app.config.from_object('zoo_server.flask_app_default_config')
+try:
+    app.config.from_envvar('APP_CONFIG')
+    print('using config:')
+    print(app.config)
+except RuntimeError:
+    print('using default config')
 
 
 """
@@ -38,8 +46,8 @@ monkeys/<id>            just the one monkey
 
 @app.route('/zoos/', methods=['POST', 'GET'])
 def all_zoos():
-    app_host = app.config.get('app_host')
-    with safe_handler(app_host) as handler:
+    db_host_name = app.config.get('DB_HOST_NAME')
+    with safe_db_handler(db_host_name) as handler:
         method = _get_method()
         request_json = _get_json()
 
@@ -54,8 +62,8 @@ def all_zoos():
 
 @app.route('/monkeys/', methods=['POST', 'GET'])
 def all_monkeys():
-    app_host = app.config.get('app_host')
-    with safe_handler(app_host) as handler:
+    db_host_name = app.config.get('DB_HOST_NAME')
+    with safe_db_handler(db_host_name) as handler:
         method = _get_method()
 
         request_json = _get_json()
@@ -70,8 +78,8 @@ def all_monkeys():
 
 @app.route('/zoos/<zoo_id>', methods=['PUT', 'GET', 'DELETE'])
 def zoo_by_name(zoo_id):
-    app_host = app.config.get('app_host')
-    with safe_handler(app_host) as handler:
+    db_host_name = app.config.get('DB_HOST_NAME')
+    with safe_db_handler(db_host_name) as handler:
         method = _get_method()
 
         request_json = _get_json()
@@ -87,8 +95,8 @@ def zoo_by_name(zoo_id):
 
 @app.route('/monkeys/<monkey_id>', methods=['PUT', 'GET', 'DELETE'])
 def monkey_by_id(monkey_id):
-    app_host = app.config.get('app_host')
-    with safe_handler(app_host) as handler:
+    db_host_name = app.config.get('DB_HOST_NAME')
+    with safe_db_handler(db_host_name) as handler:
         method = _get_method()
 
         request_json = _get_json()
@@ -104,8 +112,8 @@ def monkey_by_id(monkey_id):
 
 @app.route('/monkeys/<monkey_id>/zoo', methods=['GET'])
 def zoo_by_monkey_id(monkey_id):
-    app_host = app.config.get('app_host')
-    with safe_handler(app_host) as handler:
+    db_host_name = app.config.get('DB_HOST_NAME')
+    with safe_db_handler(db_host_name) as handler:
         method = _get_method()
 
         actions = {
@@ -117,8 +125,8 @@ def zoo_by_monkey_id(monkey_id):
 
 @app.route('/monkeys/<monkey_id>/zoo/<field>', methods=['GET'])
 def zoo_field_by_monkey_id(monkey_id, field):
-    app_host = app.config.get('app_host')
-    with safe_handler(app_host) as handler:
+    db_host_name = app.config.get('DB_HOST_NAME')
+    with safe_db_handler(db_host_name) as handler:
         method = _get_method()
 
         actions = {
@@ -149,9 +157,5 @@ def _get_method():
 
 
 if __name__ == '__main__':
-    host_arg = 'localhost'
-    if len(sys.argv) > 1:
-        host_arg = sys.argv[1]
-    app.config['app_host'] = host_arg
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="localhost", port=8080)
 

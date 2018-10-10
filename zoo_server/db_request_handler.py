@@ -161,7 +161,7 @@ def _parse_time_str(time_str):
 
 
 @contextmanager
-def safe_handler(host='localhost'):
+def safe_db_handler(host='localhost'):
     handler = DBRequestHandler(host)
     try:
         yield handler

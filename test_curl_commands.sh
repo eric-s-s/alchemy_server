@@ -1,5 +1,11 @@
 eval "$(./export_db_values)"
 
+echo creating test data
+cd sql_scripts
+./load_test_data.sh
+cd ..
+
+
 mysql ${db} -u ${user}  -e 'select * from zoo;'
 
 mysql ${db} -u ${user} -e 'select * from monkey;'
