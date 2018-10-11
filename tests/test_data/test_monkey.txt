@@ -1,0 +1,4 @@
+# name,sex,flings_poop,poop_size,zoo_name
+a,m,TRUE,1,a
+b,f,FALSE,2,b
+c,m,FALSE,3,b

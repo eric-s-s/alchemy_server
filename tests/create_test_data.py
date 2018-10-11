@@ -1,16 +1,22 @@
+from datetime import time
 import os
 import csv
-import mysql.connector as cnx
 
-from zoo_server import USER, DATA_PATH, MONKEY_TABLE, ZOO_TABLE
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session as BaseSession
 
-TEST_DB = 'test'
+from tests import TEST_DATA
+from zoo_server.db_classes import Base, Monkey, Zoo
+
+engine = create_engine("sqlite:///:memory:")
+Session = sessionmaker(bind=engine)
 
 
-def get_file_paths():
-    zoo_file = os.path.join(DATA_PATH, 'zoo_data.txt')
-    monkey_file = os.path.join(DATA_PATH, 'monkey_data.txt')
-    return zoo_file, monkey_file
+# def get_file_paths():
+#     zoo_file = os.path.join(DATA_PATH, 'zoo_data.txt')
+#     monkey_file = os.path.join(DATA_PATH, 'monkey_data.txt')
+#     return zoo_file, monkey_file
 
 
 def load_csv(file_path):
@@ -20,74 +26,55 @@ def load_csv(file_path):
     return raw
 
 
-class TestDataCreator(object):
-    def __init__(self):
-        self.db = cnx.connect(user=USER, host='localhost', database=TEST_DB)
-        self.cur = self.db.cursor()
-        self.zoo, self.monkey = get_file_paths()
-
-    def drop_test_tables(self):
-        self.cur.execute('drop table {};'.format(MONKEY_TABLE))
-        self.cur.execute('drop table {};'.format(ZOO_TABLE))
-
-    def execute_create_table_sql(self):
-        parent_dir = os.path.dirname(os.path.dirname(DATA_PATH))
-        sql_script = os.path.join(parent_dir, 'sql_scripts', 'create_tables.sql')
-        with open(sql_script, 'r') as f:
-            text = f.read()
-            commands = text.split(';')
-
-        for command in commands:
-            if command.strip('\n'):
-                self.cur.execute(command)
-
-    def load_zoo(self):
-        lines = load_csv(self.zoo)
-        for line in lines:
-            self.cur.execute("INSERT INTO {} (name, opens, closes) VALUES (%s, %s, %s)".format(ZOO_TABLE), line)
-        self.db.commit()
-
-    def load_monkey(self):
-        self.cur.execute("SELECT name, id FROM {};".format(ZOO_TABLE))
-        zoo_name_to_id = dict(self.cur.fetchall())
-
-        lines = load_csv(self.monkey)
-
-        converted = [_convert_line(line, zoo_name_to_id) for line in lines]
-
-        for line in converted:
-            command = "INSERT INTO {} (name, sex, flings_poop, poop_size, zoo_id) VALUES (%s, %s, %s, %s, %s)".format(
-                MONKEY_TABLE)
-            self.cur.execute(command, line)
-        self.db.commit()
-
-    def close(self):
-        self.db.commit()
-        self.db.close()
+def load_zoo(session):
+    zoo_path = os.path.join(TEST_DATA, 'test_zoo.txt')
+    lines = load_csv(zoo_path)
+    keys = ['name', 'opens', 'closes']
+    for line in lines:
+        kwargs = dict(zip(keys, line))
+        new_kwargs = {key: value if key == 'name' else _parse_time_str(value) for key, value in kwargs.items()}
+        zoo = Zoo(**new_kwargs)
+        session.add(zoo)
+    session.commit()
 
 
-def _convert_line(line, zoo_id_conversions):
-    out = []
-    all_conversions = zoo_id_conversions.copy()
-    all_conversions['TRUE'] = True
-    all_conversions['FALSE'] = False
-    for el in line:
-        try:
-            answer = int(el)
-        except ValueError:
-            answer = all_conversions.get(el, el)
-        out.append(answer)
-    return out
+def load_monkey(session: BaseSession):
+    monkey_path = os.path.join(TEST_DATA, 'test_monkey.txt')
+    lines = load_csv(monkey_path)
+    keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_name']
+    for line in lines:
+        raw_data = dict(zip(keys, line))
+        new_data = raw_data.copy()
+        del new_data['zoo_name']
+        zoo_id = session.query(Zoo.id).filter(Zoo.name == raw_data['zoo_name']).first()[0]
+        new_data['zoo_id'] = zoo_id
+
+        new_data['flings_poop'] = True if raw_data['flings_poop'].lower() == 'true' else False
+        new_monkey = Monkey(**new_data)
+        session.add(new_monkey)
+    session.commit()
 
 
-def main():
-    creator = TestDataCreator()
-    creator.drop_test_tables()
-    creator.execute_create_table_sql()
-    creator.load_zoo()
-    creator.load_monkey()
-    creator.close()
+def _parse_time_str(time_str):
+    hour, minute = time_str.split(':')
+    return time(int(hour), int(minute))
+
+
+def create_all_test_data(session: BaseSession):
+    Base.metadata.create_all(engine)
+
+    for zoo in session.query(Zoo).all():
+        session.delete(zoo)
+    session.commit()
+    load_zoo(session)
+    load_monkey(session)
 
 
 if __name__ == '__main__':
-    main()
+    new_session = Session()
+    create_all_test_data(new_session)
+    all_zoos = new_session.query(Zoo).all()
+
+    from pprint import pprint
+    pprint([zoo.to_dict() for zoo in all_zoos])
+    new_session.close()
