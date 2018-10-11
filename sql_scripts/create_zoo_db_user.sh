@@ -2,7 +2,7 @@ eval "$(./export_db_values.sh)"
 
 
 
-sudo mysql -e  "
+sudo mysql -h${host} -uroot -p -e  "
     CREATE DATABASE IF NOT EXISTS ${db};
     DROP USER IF EXISTS '${user}'@'${host}' ;
     CREATE USER '${user}'@'${host}';

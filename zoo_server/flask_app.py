@@ -1,11 +1,12 @@
 """a server for my dummy db using flask"""
 from functools import partial
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from werkzeug.exceptions import BadRequest
 
 from sqlalchemy import create_engine
 
+from sqlalchemy.exc import OperationalError
 
 from zoo_server import USER, DB
 from zoo_server.data_base_session import data_base_session_scope, DataBaseSession
@@ -120,6 +121,21 @@ def zoo_field_by_monkey_id(monkey_id, field):
         }
         reply = actions[method]()
     return reply
+
+
+@app.errorhandler(BadRequest)
+def handle_bad_request(e):
+    return jsonify(error=400, title="bad json", text=str(e)), 400
+
+
+@app.errorhandler(OperationalError)
+def handle_db_not_responding(e):
+    return jsonify(error=500, title="db trouble", text=str(e)), 500
+
+
+@app.errorhandler(404)
+def handle_not_found(e):
+    return jsonify(error=404, title="not found", text=str(e)), 404
 
 
 def _get_json() -> dict:
