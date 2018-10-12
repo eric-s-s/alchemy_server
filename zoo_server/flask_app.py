@@ -11,7 +11,7 @@ from sqlalchemy.exc import OperationalError
 from zoo_server import USER, DB
 from zoo_server.data_base_session import data_base_session_scope, DataBaseSession
 
-from zoo_server.db_request_handler import DBRequestHandler
+from zoo_server.db_request_handler import DBRequestHandler, BadId
 
 
 app = Flask(__name__)
@@ -125,17 +125,34 @@ def zoo_field_by_monkey_id(monkey_id, field):
 
 @app.errorhandler(BadRequest)
 def handle_bad_request(e):
-    return jsonify(error=400, title="bad json", text=str(e)), 400
+    code = 400
+    e_type = e.__class__.__name__
+    text = e.args[0]
+    title="bad request"
+    return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 
 @app.errorhandler(OperationalError)
 def handle_db_not_responding(e):
-    return jsonify(error=500, title="db trouble", text=str(e)), 500
+    code = 500
+    e_type = e.__class__.__name__
+    text = e.args[0]
+    title="db trouble"
+    return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 
 @app.errorhandler(404)
 def handle_not_found(e):
     return jsonify(error=404, title="not found", text=str(e)), 404
+
+
+@app.errorhandler(BadId)
+def handle_bad_id(e):
+    code = 404
+    e_type = e.__class__.__name__
+    text = e.args[0]
+    title="not found"
+    return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 
 def _get_json() -> dict:
@@ -159,4 +176,4 @@ def _get_method():
 
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=8080)
+    app.run()

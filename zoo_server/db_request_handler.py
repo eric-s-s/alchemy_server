@@ -6,6 +6,10 @@ from sqlalchemy.orm.session import Session
 from zoo_server.db_classes import Monkey, Zoo
 
 
+class BadId(ValueError):
+    pass
+
+
 class DBRequestHandler(object):
     def __init__(self, session: Session):
         self.session = session
@@ -37,8 +41,7 @@ class DBRequestHandler(object):
         :return: json_str, response_code
         """
         zoo = self.session.query(Zoo).filter(Zoo.id == zoo_id).first()
-        if zoo is None:
-            return "zoo_id does not exist: {}".format(zoo_id), 404
+        _raise_bad_id_for_none_value(zoo, zoo_id)
         return json.dumps(zoo.to_dict()), 200
 
     def get_monkey(self, monkey_id):
@@ -48,20 +51,17 @@ class DBRequestHandler(object):
         :return: json_str, response_code
         """
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
-        if monkey is None:
-            return "monkey_id does not exist: {}".format(monkey_id), 404
+        _raise_bad_id_for_none_value(monkey, monkey_id)
         return json.dumps(monkey.to_dict()), 200
 
     def get_zoo_by_monkey(self, monkey_id):
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
-        if monkey is None:
-            return "monkey_id does not exists: {}".format(monkey_id), 404
+        _raise_bad_id_for_none_value(monkey, monkey_id)
         return json.dumps(monkey.zoo.to_dict()), 200
 
     def get_zoo_field_by_monkey(self, monkey_id, field):
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
-        if monkey is None:
-            return "monkey_id does not exists: {}".format(monkey_id), 404
+        _raise_bad_id_for_none_value(monkey, monkey_id)
         zoo = monkey.zoo
         if not hasattr(zoo, field):
             return "zoo does not have field: {!r}".format(field), 404
@@ -72,8 +72,7 @@ class DBRequestHandler(object):
         json fields: opens, closes
         """
         zoo = self.session.query(Zoo).filter(Zoo.id == zoo_id).first()
-        if zoo is None:
-            return "zoo_id does not exist: {}".format(zoo_id), 404
+        _raise_bad_id_for_none_value(zoo, zoo_id)
         keys = ['opens', 'closes']
         bad_fields = [key for key in json_data.keys() if key not in keys]
         if bad_fields:
@@ -89,8 +88,7 @@ class DBRequestHandler(object):
         json fields: name, sex, flings_poop, poop_size, zoo_id
         """
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
-        if monkey is None:
-            return "monkey_id does not exist: {}".format(monkey_id), 404
+        _raise_bad_id_for_none_value(monkey, monkey_id)
         keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_id']
         bad_fields = [key for key in json_data.keys() if key not in keys]
         if bad_fields:
@@ -126,16 +124,14 @@ class DBRequestHandler(object):
 
     def delete_monkey(self, monkey_id):
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
-        if monkey is None:
-            return "monkey_id does not exist: {}".format(monkey_id), 404
+        _raise_bad_id_for_none_value(monkey, monkey_id)
         self.session.delete(monkey)
         self.session.commit()
         return self.get_all_monkeys()
 
     def delete_zoo(self, zoo_id):
         zoo = self.session.query(Zoo).filter(Zoo.id == zoo_id).first()
-        if zoo is None:
-            return "zoo_id does not exist: {}".format(zoo_id), 404
+        _raise_bad_id_for_none_value(zoo, zoo_id)
         self.session.delete(zoo)
         self.session.commit()
         return self.get_all_zoos()
@@ -155,3 +151,8 @@ def _convert_value(value):
 def _parse_time_str(time_str):
     hour, minute = time_str.split(':')
     return time(int(hour), int(minute))
+
+
+def _raise_bad_id_for_none_value(response_obj, id_value):
+    if response_obj is None:
+        raise BadId("id does not exist: {}".format(id_value))

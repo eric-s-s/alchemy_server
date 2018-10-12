@@ -28,10 +28,10 @@ printf "\n\n\ncommand: GET zoo via monkey_id 2\n\n" | tee  -a output.txt  error.
 curl localhost:8080/monkeys/2/zoo | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand: GET zoo  ERROR\n\n" | tee  -a output.txt  error.txt
-curl localhost:8080/zoos/nope >> output.txt 2>> error.txt
+curl localhost:8080/zoos/nope | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand: GET zoo via monkey_id 2 ERROR\n\n" | tee  -a output.txt  error.txt
-curl localhost:8080/monkeys/100/zoo >> output.txt 2>> error.txt
+curl localhost:8080/monkeys/100/zoo | jq . >> output.txt 2>> error.txt
 
 # POST
 printf "\n\n\ncommand POST zoo \n\n" | tee  -a output.txt  error.txt
