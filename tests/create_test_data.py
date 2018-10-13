@@ -4,19 +4,12 @@ import csv
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session as BaseSession
-
+from sqlalchemy.orm import Session as BaseSession
 from tests import TEST_DATA
 from zoo_server.db_classes import Base, Monkey, Zoo
 
 engine = create_engine("sqlite:///:memory:")
-Session = sessionmaker(bind=engine)
-
-
-# def get_file_paths():
-#     zoo_file = os.path.join(DATA_PATH, 'zoo_data.txt')
-#     monkey_file = os.path.join(DATA_PATH, 'monkey_data.txt')
-#     return zoo_file, monkey_file
+TestSession = sessionmaker(bind=engine)
 
 
 def load_csv(file_path):
@@ -71,7 +64,7 @@ def create_all_test_data(session: BaseSession):
 
 
 if __name__ == '__main__':
-    new_session = Session()
+    new_session = TestSession()
     create_all_test_data(new_session)
     all_zoos = new_session.query(Zoo).all()
 

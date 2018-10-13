@@ -10,13 +10,19 @@ class BadId(ValueError):
     pass
 
 
+class BadData(ValueError):
+    pass
+
+
 class DBRequestHandler(object):
     def __init__(self, session: Session):
         self.session = session
+        self.monkey_keys = {"name", "sex", "flings_poop", "poop_size", "zoo_id"}
+        self.zoo_keys = {"name", "opens", "closes"}
 
     def get_all_zoos(self):
         """
-        return fields: id, name, opens, closes, number_of_monkeys
+        return fields: id, name, opens, closes, monkeys
 
         :return: json_str, code
         """
@@ -73,12 +79,12 @@ class DBRequestHandler(object):
         """
         zoo = self.session.query(Zoo).filter(Zoo.id == zoo_id).first()
         _raise_bad_id_for_none_value(zoo, zoo_id)
-        keys = ['opens', 'closes']
-        bad_fields = [key for key in json_data.keys() if key not in keys]
-        if bad_fields:
-            return "following json fields not allowed: {}".format(bad_fields), 400
+        _raise_bad_data_put(json_data, self.zoo_keys)
         for key, raw_value in json_data.items():
-            value = _parse_time_str(raw_value)
+            if key in ["opens", "closes"]:
+                value = _parse_time_str(raw_value)
+            else:
+                value = raw_value
             setattr(zoo, key, value)
         self.session.commit()
         return json.dumps(zoo.to_dict()), 200
@@ -90,6 +96,7 @@ class DBRequestHandler(object):
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
         _raise_bad_id_for_none_value(monkey, monkey_id)
         keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_id']
+        _raise_bad_data_put(json_data, self.monkey_keys)
         bad_fields = [key for key in json_data.keys() if key not in keys]
         if bad_fields:
             return "following json fields not allowed: {}".format(bad_fields), 400
@@ -104,6 +111,7 @@ class DBRequestHandler(object):
         json fields: name, opens, closes
         """
         new_data = json_data.copy()
+        _raise_bad_data_post(json_data, self.zoo_keys)
         for key in ['opens', 'closes']:
             new_data[key] = _parse_time_str(json_data[key])
         new_zoo = Zoo(**new_data)
@@ -116,6 +124,7 @@ class DBRequestHandler(object):
         json fields: name, sex, flings_poop, poop_size, zoo_id
         """
         new_data = json_data.copy()
+        _raise_bad_data_post(new_data, self.monkey_keys)
         new_data['flings_poop'] = True if json_data['flings_poop'].lower() == 'true' else False
         new_monkey = Monkey(**new_data)
         self.session.add(new_monkey)
@@ -149,10 +158,25 @@ def _convert_value(value):
 
 
 def _parse_time_str(time_str):
-    hour, minute = time_str.split(':')
-    return time(int(hour), int(minute))
+    try:
+        hour, minute = time_str.split(':')
+        return time(int(hour), int(minute))
+    except (ValueError, TypeError):
+        raise BadData("expected time in format hour:minute. got : {}".format(time_str))
 
 
 def _raise_bad_id_for_none_value(response_obj, id_value):
     if response_obj is None:
         raise BadId("id does not exist: {}".format(id_value))
+
+
+def _raise_bad_data_post(json_dict, key_set):
+    json_keys = set(json_dict.keys())
+    if set(json_dict.keys()) != key_set:
+        raise BadData("json keys: {}, required keys: {}".format(json_keys, key_set))
+
+
+def _raise_bad_data_put(json_dict, key_set):
+    json_keys = set(json_dict.keys())
+    if not json_keys.issubset(key_set):
+        raise BadData("json keys: {} must be subset of keys: {}".format(json_keys, key_set))

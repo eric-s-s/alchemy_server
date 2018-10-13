@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 eval "$(./export_db_values.sh)"
 
 

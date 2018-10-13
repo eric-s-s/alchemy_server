@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 echo "host=localhost"
 echo "db=zoo_db"

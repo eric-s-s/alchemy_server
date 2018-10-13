@@ -11,7 +11,7 @@ from sqlalchemy.exc import OperationalError
 from zoo_server import USER, DB
 from zoo_server.data_base_session import data_base_session_scope, DataBaseSession
 
-from zoo_server.db_request_handler import DBRequestHandler, BadId
+from zoo_server.db_request_handler import DBRequestHandler, BadId, BadData
 
 
 app = Flask(__name__)
@@ -152,6 +152,15 @@ def handle_bad_id(e):
     e_type = e.__class__.__name__
     text = e.args[0]
     title="not found"
+    return jsonify(error=code, title=title, error_type=e_type, text=text), code
+
+
+@app.errorhandler(BadData)
+def handle_bad_id(e):
+    code = 400
+    e_type = e.__class__.__name__
+    text = e.args[0]
+    title="bad request"
     return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 
