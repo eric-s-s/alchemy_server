@@ -127,7 +127,7 @@ def zoo_field_by_monkey_id(monkey_id, field):
 def handle_bad_request(e):
     code = 400
     e_type = e.__class__.__name__
-    text = e.args[0]
+    text = str(e)
     title="bad request"
     return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
