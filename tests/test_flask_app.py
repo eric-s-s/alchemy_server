@@ -1,11 +1,10 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import json
 
 from zoo_server import flask_app
 from zoo_server.db_request_handler import DBRequestHandler, BadData, BadId
-from tests.create_test_data import create_all_test_data, TestSession
 
 
 HANDLER_PATCH_STR = 'zoo_server.flask_app.DBRequestHandler'
@@ -14,36 +13,13 @@ SESSION_PATCH_STR = 'zoo_server.data_base_session.DataBaseSession'
 
 class TestFlaskApp(unittest.TestCase):
 
-    session_patch_str = 'zoo_server.data_base_session.DataBaseSession'
-
-    methods = [key for key in DBRequestHandler.__dict__.keys() if not key.startswith('__')]
-
     def setUp(self):
         self.app = flask_app.app.test_client()
         flask_app.app.testing = True
-        create_all_test_data(TestSession())
-
-    def assert_monkey_added(self, monkey_json):
-        all_monkeys = json.loads(self.app.get('/monkeys/').data)
-        self.assertEqual(len(all_monkeys), 4)
-        self.assertIn(monkey_json, all_monkeys)
-
-    def assert_zoo_added(self, zoo_json):
-        all_zoos = json.loads(self.app.get('/zoos/').data)
-        self.assertEqual(len(all_zoos), 4)
-        self.assertIn(zoo_json, all_zoos)
-
-    def assert_all_monkeys_len(self, expected):
-        all_monkeys = json.loads(self.app.get('/monkeys/').data)
-        self.assertEqual(len(all_monkeys), expected)
-
-    def assert_all_zoos_len(self, expected):
-        all_zoos = json.loads(self.app.get('/zoos/').data)
-        self.assertEqual(len(all_zoos), expected)
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
-    def test_all_monkeys_get_alt(self, handler_class, session_class):
+    def test_all_monkeys_get(self, handler_class, session_class):
         handler_instance, session_instance = create_instances(handler_class, session_class)
         handler_instance.get_all_monkeys.return_value = 'ok', 200
 
@@ -57,7 +33,7 @@ class TestFlaskApp(unittest.TestCase):
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
-    def test_all_monkeys_post_alt(self, handler_class, session_class):
+    def test_all_monkeys_post(self, handler_class, session_class):
         handler_instance, session_instance = create_instances(handler_class, session_class)
         handler_instance.post_monkey.return_value = 'ok', 200
 
@@ -342,7 +318,6 @@ class TestFlaskApp(unittest.TestCase):
         handler_instance.get_zoo.assert_called_once_with('1')
         session_instance.close.assert_called_once_with()
 
-
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
     def test_monkey_by_id_get(self, handler_class, session_class):
@@ -484,38 +459,6 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         handler_instance.get_monkey.assert_called_once_with('1')
         session_instance.close.assert_called_once_with()
-
-    # def test_zoo_by_monkey_id_get(self):
-    #     with patch(self.handler_patch_str, self.handler_mock):
-    #         with patch(self.session_patch_str, TestSession):
-    #             self.app.get('/monkeys/1/zoo')
-    #
-    #             self.handler_instance.get_zoo_by_monkey.assert_called_once_with('1')
-    #             self.session_instance.close.assert_called_once()
-    #
-    # def test_zoo_by_monkey_id_head(self):
-    #     with patch(self.handler_patch_str, self.handler_mock):
-    #         with patch(self.session_patch_str, TestSession):
-    #             self.app.head('/monkeys/1/zoo')
-    #
-    #             self.handler_instance.get_zoo_by_monkey.assert_called_once_with('1')
-    #             self.session_instance.close.assert_called_once()
-    #
-    # def test_zoo_field_by_monkey_id_get(self):
-    #     with patch(self.handler_patch_str, self.handler_mock):
-    #         with patch(self.session_patch_str, TestSession):
-    #             self.app.get('/monkeys/1/zoo/name')
-    #
-    #             self.handler_instance.get_zoo_field_by_monkey.assert_called_once_with('1', 'name')
-    #             self.session_instance.close.assert_called_once()
-    #
-    # def test_zoo_field_by_monkey_id_head(self):
-    #     with patch(self.handler_patch_str, self.handler_mock):
-    #         with patch(self.session_patch_str, TestSession):
-    #             self.app.head('/monkeys/1/zoo/name')
-    #
-    #             self.handler_instance.get_zoo_field_by_monkey.assert_called_once_with('1', 'name')
-    #             self.session_instance.close.assert_called_once()
 
 
 def create_instances(handler_class_mock, session_class_mock):

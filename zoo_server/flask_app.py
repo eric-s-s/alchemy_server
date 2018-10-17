@@ -128,7 +128,7 @@ def handle_bad_request(e):
     code = 400
     e_type = e.__class__.__name__
     text = str(e)
-    title="bad request"
+    title = "bad request"
     return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 
@@ -137,7 +137,7 @@ def handle_db_not_responding(e):
     code = 500
     e_type = e.__class__.__name__
     text = e.args[0]
-    title="db trouble"
+    title = "db trouble"
     return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 
@@ -151,7 +151,7 @@ def handle_bad_id(e):
     code = 404
     e_type = e.__class__.__name__
     text = e.args[0]
-    title="not found"
+    title = "not found"
     return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 
@@ -160,7 +160,7 @@ def handle_bad_id(e):
     code = 400
     e_type = e.__class__.__name__
     text = e.args[0]
-    title="bad request"
+    title = "bad request"
     return jsonify(error=code, title=title, error_type=e_type, text=text), code
 
 

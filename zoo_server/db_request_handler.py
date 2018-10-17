@@ -95,11 +95,7 @@ class DBRequestHandler(object):
         """
         monkey = self.session.query(Monkey).filter(Monkey.id == monkey_id).first()
         _raise_bad_id_for_none_value(monkey, monkey_id)
-        keys = ['name', 'sex', 'flings_poop', 'poop_size', 'zoo_id']
         _raise_bad_data_put(json_data, self.monkey_keys)
-        bad_fields = [key for key in json_data.keys() if key not in keys]
-        if bad_fields:
-            return "following json fields not allowed: {}".format(bad_fields), 400
         for key, raw_value in json_data.items():
             value = _convert_value(raw_value)
             setattr(monkey, key, value)
@@ -107,7 +103,7 @@ class DBRequestHandler(object):
         return json.dumps(monkey.to_dict()), 200
 
     def post_zoo(self, json_data):
-        """
+        """"
         json fields: name, opens, closes
         """
         new_data = json_data.copy()
@@ -149,11 +145,15 @@ class DBRequestHandler(object):
 def _convert_value(value):
     if not isinstance(value, str):
         return value
+
     if value.lower() == 'true':
         return True
-    elif value.lower() == 'false':
+    if value.lower() == 'false':
         return False
-    else:
+
+    try:
+        return int(value)
+    except ValueError:
         return value
 
 

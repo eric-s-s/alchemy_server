@@ -25,21 +25,18 @@ class TestDBRequestHandler(unittest.TestCase):
              'name': 'a',
              'poop_size': 1,
              'sex': 'm',
-             'zoo_name': "a",
              'zoo_id': 1},
             {'flings_poop': 'FALSE',
              'id': 2,
              'name': 'b',
              'poop_size': 2,
              'sex': 'f',
-             'zoo_name': 'b',
              'zoo_id': 2},
             {'flings_poop': 'FALSE',
              'id': 3,
              'name': 'c',
              'poop_size': 3,
              'sex': 'm',
-             'zoo_name': 'b',
              'zoo_id': 2},
         ]
         self.assertEqual(json.loads(answer[0]), expected_json)
@@ -59,7 +56,6 @@ class TestDBRequestHandler(unittest.TestCase):
                       'name': 'a',
                       'poop_size': 1,
                       'sex': 'm',
-                      'zoo_name': "a",
                       'zoo_id': 1}
                  ]
              },
@@ -74,14 +70,12 @@ class TestDBRequestHandler(unittest.TestCase):
                       'name': 'b',
                       'poop_size': 2,
                       'sex': 'f',
-                      'zoo_name': 'b',
                       'zoo_id': 2},
                      {'flings_poop': 'FALSE',
                       'id': 3,
                       'name': 'c',
                       'poop_size': 3,
                       'sex': 'm',
-                      'zoo_name': 'b',
                       'zoo_id': 2},
                  ]
              }
@@ -104,7 +98,6 @@ class TestDBRequestHandler(unittest.TestCase):
                  'name': 'a',
                  'poop_size': 1,
                  'sex': 'm',
-                 'zoo_name': "a",
                  'zoo_id': 1},
             ],
         }
@@ -124,7 +117,6 @@ class TestDBRequestHandler(unittest.TestCase):
             'name': 'a',
             'poop_size': 1,
             'sex': 'm',
-            'zoo_name': "a",
             'zoo_id': 1
                     }
         self.assertEqual(json.loads(answer[0]), expected)
@@ -160,7 +152,6 @@ class TestDBRequestHandler(unittest.TestCase):
         to_post = {'name': 'd', 'sex': 'm', 'flings_poop': 'FALSE', 'poop_size': 100, 'zoo_id': 1}
         first_answer = self.handler.post_monkey(to_post)
         to_post['id'] = json.loads(first_answer[0])['id']
-        to_post['zoo_name'] = 'a'
 
         self.assertEqual(json.loads(first_answer[0]), to_post)
         self.assertEqual(first_answer[1], 200)
@@ -184,8 +175,6 @@ class TestDBRequestHandler(unittest.TestCase):
         to_put = {"name": "q", "opens": "11:00", "closes": "12:00"}
         expected = current_state.copy()
         expected.update(**to_put)
-        for monkey in expected['monkeys']:
-            monkey['zoo_name'] = 'q'
         self.assertNotEqual(current_state, expected)
 
         response = self.handler.put_zoo(zoo_id, to_put)
@@ -224,10 +213,9 @@ class TestDBRequestHandler(unittest.TestCase):
     def test_put_monkey_total(self):
         monkey_id = 1
         current_state = json.loads(self.handler.get_monkey(monkey_id)[0])
-        to_put = {'name': 'x', 'sex': 'f', 'flings_poop': 'FALSE', 'poop_size': 1000,'zoo_id': 2}
+        to_put = {'name': 'x', 'sex': 'f', 'flings_poop': 'FALSE', 'poop_size': 1000, 'zoo_id': 2}
         expected = current_state.copy()
         expected.update(**to_put)
-        expected['zoo_name'] = 'b'
         self.assertNotEqual(current_state, expected)
 
         response = self.handler.put_monkey(monkey_id, to_put)
@@ -243,7 +231,6 @@ class TestDBRequestHandler(unittest.TestCase):
         to_put = {'flings_poop': 'FALSE', 'zoo_id': 2}
         expected = current_state.copy()
         expected.update(**to_put)
-        expected['zoo_name'] = 'b'
         self.assertNotEqual(current_state, expected)
 
         response = self.handler.put_monkey(monkey_id, to_put)

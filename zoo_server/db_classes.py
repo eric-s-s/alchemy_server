@@ -58,6 +58,5 @@ class Monkey(Base):
             'sex': self.sex.name,
             'flings_poop': str(self.flings_poop).upper(),
             'poop_size': self.poop_size,
-            'zoo_name': self.zoo.name,
             'zoo_id': self.zoo_id
         }
